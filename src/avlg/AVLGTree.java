@@ -20,7 +20,7 @@ import avlg.exceptions.InvalidBalanceException;
  *  accept bad search performance now and then if it would mean less rotations. On the other hand, increasing
  *  the balance parameter also means that we will be making <b>insertions</b> faster.</p>
  *
- * @author YOUR NAME HERE!
+ * @author Jemimah E.P. Salvacion
  *
  * @see EmptyTreeException
  * @see InvalidBalanceException
@@ -31,7 +31,21 @@ public class AVLGTree<T extends Comparable<T>> {
     /* ********************************************************* *
      * Write any private data elements or private methods here...*
      * ********************************************************* */
-
+	private class TreeNode {
+		private T data;
+		private TreeNode lChild;
+		private TreeNode rChild;
+		
+		public TreeNode() {
+			data = null;
+			lChild = null;
+			rChild = null;
+		}
+	}
+	
+	private TreeNode root;
+	private int maxImbalance;
+	private int size;
 
 
     /* ******************************************************** *
@@ -44,7 +58,9 @@ public class AVLGTree<T extends Comparable<T>> {
      * @throws InvalidBalanceException if maxImbalance is a value smaller than 1.
      */
     public AVLGTree(int maxImbalance) throws InvalidBalanceException {
-        throw new UnimplementedMethodException();       // ERASE THIS LINE AFTER YOU IMPLEMENT THIS METHOD!
+    	root = null;
+    	this.maxImbalance = maxImbalance;
+    	size = 0;
     }
 
     /**
@@ -55,7 +71,38 @@ public class AVLGTree<T extends Comparable<T>> {
      * @param key The key to insert in the tree.
      */
     public void insert(T key) {
-        throw new UnimplementedMethodException();       // ERASE THIS LINE AFTER YOU IMPLEMENT THIS METHOD!
+    	root = insertHelper(root,key);
+    	if (getCurrBalance(root) < -1) {
+    		if (getCurrBalance(root.rChild) < 0)
+    			rotateLeft(root);
+    		else if (getCurrBalance(root.rChild) > 0)
+    			rotateRL(root);
+    	} else if (getCurrBalance(root) > 1) {
+    		if (getCurrBalance(root.lChild) > 0)
+    			rotateRight(root);
+    		else if (getCurrBalance(root.lChild) < 0)
+    			rotateLR(root);
+    	}
+    }
+    
+    /**
+     * Helper method for insert()
+     * Insertions must involve checking if maxImbalance is reached
+     * If so, rotations must be done.
+     */
+    private TreeNode insertHelper(TreeNode rt, T keyInput) {
+    	if (rt == null) {
+    		rt = new TreeNode();
+    		rt.data = keyInput;
+    		size++;
+    	}
+    	if (keyInput.compareTo(rt.data) < 0) {
+    		rt.lChild = insertHelper(rt.lChild,keyInput);
+    	}
+    	if (keyInput.compareTo(rt.data) > 0) {
+    		rt.rChild = insertHelper(rt.rChild,keyInput);
+    	}
+    	return rt;
     }
 
     /**
@@ -84,7 +131,7 @@ public class AVLGTree<T extends Comparable<T>> {
      * @return The maximum imbalance parameter provided as a constructor parameter.
      */
     public int getMaxImbalance(){
-        throw new UnimplementedMethodException();       // ERASE THIS LINE AFTER YOU IMPLEMENT THIS METHOD!
+    	return maxImbalance;
     }
 
 
@@ -95,15 +142,17 @@ public class AVLGTree<T extends Comparable<T>> {
      * @return The height of the tree. If the tree is empty, returns -1.
      */
     public int getHeight() {
-        throw new UnimplementedMethodException();       // ERASE THIS LINE AFTER YOU IMPLEMENT THIS METHOD!
+    	return heightHelper(root);
     }
-
+     
     /**
      * Query the tree for emptiness. A tree is empty iff it has zero keys stored.
      * @return {@code true} if the tree is empty, {@code false} otherwise.
      */
     public boolean isEmpty() {
-        throw new UnimplementedMethodException();       // ERASE THIS LINE AFTER YOU IMPLEMENT THIS METHOD!
+        if (size == 0)
+        	return true;
+        return false;
     }
 
     /**
@@ -112,7 +161,7 @@ public class AVLGTree<T extends Comparable<T>> {
      * @throws  EmptyTreeException if the tree is empty.
      */
     public T getRoot() throws EmptyTreeException{
-        throw new UnimplementedMethodException();       // ERASE THIS LINE AFTER YOU IMPLEMENT THIS METHOD!
+    	return root.data;
     }
 
 
@@ -142,7 +191,8 @@ public class AVLGTree<T extends Comparable<T>> {
      * tree should have <b>0</b> elements.</p>
      */
     public void clear(){
-        throw new UnimplementedMethodException();       // ERASE THIS LINE AFTER YOU IMPLEMENT THIS METHOD!
+    	root = null;
+    	size = 0;
     }
 
 
@@ -153,4 +203,130 @@ public class AVLGTree<T extends Comparable<T>> {
     public int getCount(){
         throw new UnimplementedMethodException();       // ERASE THIS LINE AFTER YOU IMPLEMENT THIS METHOD!
     }
+    
+    /* ******************************************************** *
+     * ************************ PRIVATE METHODS **************** *
+     * ******************************************************** */
+    
+    /* heightHelper(TreeNode rt):
+     * rt - root node
+     * 
+     * Helper method for getHeight()
+     */
+    private int heightHelper(TreeNode rt) {
+		if (rt == null) {
+			return -1;
+		} else {
+			int lHeight = heightHelper(rt.lChild);
+			int rHeight = heightHelper(rt.rChild);
+			
+			if (rHeight > lHeight)
+				return rHeight + 1;
+			else
+				return lHeight + 1;
+		}		
+	}
+    
+    /* Balance:
+     * B(n) = h(LTree) - h(RTree)
+     */
+    private int getCurrBalance(TreeNode node) {
+    	return heightHelper(node.lChild) - heightHelper(node.rChild);
+    }
+    
+    /* Rotations:
+     * - After insertion of new element, must check the balance of root
+     * - Left Rotation requires B(n) < -1 && B(r) < 0
+     */
+    private void rotateLeft(TreeNode node) {
+    	if (node.lChild != null) {
+			rotateLeft(node.lChild);
+		}
+    	if (!isLeaf(node)) {
+			TreeNode temp = node.rChild; 
+			if (node.lChild == null)
+				node.lChild = new TreeNode();
+			node.lChild.data = node.data;
+			if (node.rChild != null) {
+				node.data = node.rChild.data;		
+				node.rChild = temp.rChild;
+			} 
+		} 
+		if (isLeaf(node)) {
+			if (node.lChild == null)
+				node.lChild = new TreeNode();
+			node.lChild.data = node.data;
+			return;
+		}   	
+    }
+    
+    /*rotateRight(TreeNode right)
+     * - After insertion of new element, must check the balance of root
+     * - Right Rotation requires B(n) > 1 && B(r) > 0
+     */
+    private void rotateRight(TreeNode node) {
+    	if (node.rChild != null) {
+    		rotateRight(node.rChild);
+    	}
+    	if (!isLeaf(node)) {
+    		TreeNode temp = node.lChild; 
+			if (node.rChild == null)
+				node.rChild = new TreeNode();
+			node.rChild.data = node.data;
+			if (node.lChild != null) {
+				node.data = node.lChild.data;		
+				node.lChild = temp.lChild;
+			} 
+    	}
+    	if (isLeaf(node)) {
+			if (node.rChild == null)
+				node.rChild = new TreeNode();
+			node.rChild.data = node.data;
+			return;
+		} 
+    }
+    
+    /*rotateRL(TreeNode node)
+     * - Rotate right at root of left subtree, then rotate
+     * left at tree node
+     */
+    private void rotateRL(TreeNode node) {
+    	 rotateRight(node.rChild);
+    	 rotateLeft(node);
+    }
+    
+    /*rotateLR(TreeNode node)
+     * - Rotate left at root of right subtree, then rotate
+     * left at tree node
+     */
+    private void rotateLR(TreeNode node) {
+    	rotateLeft(node.lChild);
+    	rotateRight(node);
+    }
+    
+    /*isLeaf(TreeNode curr): checks if current node is a leaf
+     * Parameters:
+     * curr - node input
+     * Other notes:
+     * Will assume that curr is not null
+     */
+    private boolean isLeaf(TreeNode curr) {
+    	return curr.lChild == null && curr.rChild == null;
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 }
