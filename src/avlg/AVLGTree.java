@@ -72,17 +72,6 @@ public class AVLGTree<T extends Comparable<T>> {
      */
     public void insert(T key) {
     	root = insertHelper(root,key);
-    	if (getCurrBalance(root) < -1) {
-    		if (getCurrBalance(root.rChild) < 0)
-    			rotateLeft(root);
-    		else if (getCurrBalance(root.rChild) > 0)
-    			rotateRL(root);
-    	} else if (getCurrBalance(root) > 1) {
-    		if (getCurrBalance(root.lChild) > 0)
-    			rotateRight(root);
-    		else if (getCurrBalance(root.lChild) < 0)
-    			rotateLR(root);
-    	}
     }
     
     /**
@@ -98,11 +87,30 @@ public class AVLGTree<T extends Comparable<T>> {
     	}
     	if (keyInput.compareTo(rt.data) < 0) {
     		rt.lChild = insertHelper(rt.lChild,keyInput);
+        	rotator(rt);
     	}
     	if (keyInput.compareTo(rt.data) > 0) {
     		rt.rChild = insertHelper(rt.rChild,keyInput);
+        	rotator(rt);
     	}
-    	return rt;
+    	 return rt;
+    }
+    
+    /* rotator(TreeNode rt): 
+     * Helper method to check balance of current node and determine whether rotations are needed
+     */
+    private void rotator(TreeNode rt) {
+    	if (getCurrBalance(rt) < -1*maxImbalance) {
+    		if (getCurrBalance(rt.rChild) < 0 || getCurrBalance(rt.rChild) == maxImbalance)
+    			rotateLeft(rt);
+    		else if (getCurrBalance(rt.rChild) > 0)
+    			rotateRL(rt);
+    	} else if (getCurrBalance(rt) > maxImbalance) {
+    		if (getCurrBalance(rt.lChild) > 0 || getCurrBalance(rt.lChild) == maxImbalance)
+    			rotateRight(rt);
+    		else if (getCurrBalance(rt.lChild) < 0)
+    			rotateLR(rt);
+    	}
     }
 
     /**
@@ -112,7 +120,44 @@ public class AVLGTree<T extends Comparable<T>> {
      * @throws EmptyTreeException if the tree is empty.
      */
     public T delete(T key) throws EmptyTreeException {
-        throw new UnimplementedMethodException();       // ERASE THIS LINE AFTER YOU IMPLEMENT THIS METHOD!
+    	root = deleteHelper(root,key);
+        return key;
+    }
+    
+    /* deleteHelper(TreeNode curr, T keyInput)
+     * 
+     */
+    private TreeNode deleteHelper(TreeNode node, T keyInput) {
+    	TreeNode curr = node;
+    	if (node != null) {
+	    	if (keyInput.compareTo(node.data) == 0) {
+	    		if (isLeaf(curr)) {
+	    			curr = null;
+	    		} else {
+	    			if (curr.rChild.lChild == null) {
+	    				curr.data = curr.rChild.data;
+	    				curr.rChild = deleteHelper(curr.rChild,curr.data);
+	    			} else {
+	    				T temp = fetch(curr.rChild.lChild);
+	    				curr.data = temp;
+	    				curr.rChild = deleteHelper(curr.rChild,temp);
+	    			}
+	    		}
+	    	}    		
+	    	else if (keyInput.compareTo(node.data) < 0)
+	    		curr.lChild = deleteHelper(node.lChild,keyInput);
+	    	else if (keyInput.compareTo(node.data) > 0)
+	    		curr.rChild = deleteHelper(node.rChild,keyInput);
+    	}
+    	return curr;
+    }
+    /* fetch(TreeNode curr):
+     * Will fetch leftmost leaf on specified branch of curr
+     */
+    private T fetch(TreeNode curr) {
+    	if (curr.lChild == null) 
+    		return curr.data;
+    	return fetch(curr.lChild);
     }
 
     /**
@@ -123,8 +168,23 @@ public class AVLGTree<T extends Comparable<T>> {
      * @throws EmptyTreeException if the tree is empty.
      */
     public T search(T key) throws EmptyTreeException {
-        throw new UnimplementedMethodException();       // ERASE THIS LINE AFTER YOU IMPLEMENT THIS METHOD!
+        return searchHelper(root,key).data;
     }
+    
+    private TreeNode searchHelper(TreeNode node,T keyInput) {
+    	TreeNode toReturn = node;
+    	if (node != null) {
+	    	if (keyInput.compareTo(node.data) == 0)
+	    		return toReturn;
+	    	else if (keyInput.compareTo(node.data) < 0)
+	    		toReturn = searchHelper(node.lChild,keyInput);
+	    	else if (keyInput.compareTo(node.data) > 0)
+	    		toReturn = searchHelper(node.rChild,keyInput);
+    	}
+    	return toReturn;
+    }
+    
+    
 
     /**
      * Retrieves the maximum imbalance parameter.
@@ -161,6 +221,8 @@ public class AVLGTree<T extends Comparable<T>> {
      * @throws  EmptyTreeException if the tree is empty.
      */
     public T getRoot() throws EmptyTreeException{
+    	if (isEmpty())
+    		throw new EmptyTreeException("No elements in tree.");
     	return root.data;
     }
 
@@ -274,7 +336,12 @@ public class AVLGTree<T extends Comparable<T>> {
 				node.rChild = new TreeNode();
 			node.rChild.data = node.data;
 			if (node.lChild != null) {
-				node.data = node.lChild.data;		
+				node.data = node.lChild.data;
+				if (temp.rChild != null) {
+					if (node.rChild.lChild == null)
+						node.rChild.lChild = new TreeNode();
+					node.rChild.lChild.data = temp.rChild.data;
+				}
 				node.lChild = temp.lChild;
 			} 
     	}
