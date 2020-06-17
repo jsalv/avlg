@@ -87,57 +87,57 @@ public class StudentTests {
     }
     
    
-//    /* In class, we mentioned an interesting special case of deletion. Namely, when we delete from a subtree and it 
-//     * turns out that we have to balance, to determine which kind of rotation we have to do, we have to check the balance
-//     * of the *opposite* subtree. If this balance is 0, then either a double rotation or a single rotation will do the 
-//     * trick for us. Exactly because *both* are possible, there is no reason to go for the double rotation and your 
-//     * code *should* perform a single one! The following test checks for exactly this by making sure that the correct
-//     * node is elevated as the root of the AVL-1 tree.
-//     */
-//    @Test
-//    public void testCorrectRotationAfterDelete() throws InvalidBalanceException, EmptyTreeException{
-//        tree = new AVLGTree<>(1);
-//        tree.insert(5);
-//        tree.insert(2);
-//        tree.insert(7);
-//        tree.insert(6);
-//        tree.insert(8);
-//
-//        /* The tree should then look like this:
-//        *
-//        *                           5
-//        *                          / \
-//        *                         /   \
-//        *                        2     7
-//        *                             / \
-//        *                            /   \
-//        *                           6     8
-//        *
-//        *  We will delete (2) and check to see if the code will perform a left rotation about the root (as it should),
-//        *  which would put 7 as the new root, or a right-left rotation about the root (which it should *not* do), which
-//        *  would elevate 6 as the new root.
-//        *
-//        *  Deletion is the most complex operation that you will have to implement, which in turn means that your implementation
-//        *  might initially encounter all kinds of problems and throw all kinds of exceptions. In Java, any Object that can be thrown
-//        *  implements the interface Throwable. So if you catch Throwables, you catch anything. Have a look at how we
-//        *  encapsulate the deletion call within a try-catch block and use the information from the thrown Exception to determine
-//        *  what exactly happened and elevate that information to the user. fail() is a method in org.junit.Assert which we statically
-//        *  import at the top of this file. This method essentially fails the test with the provided message. This is how we give you your
-//        *  messages on the submit server whenever you fail a test!
-//        */
-//        try {
-//            tree.delete(2);
-//        }  catch(Throwable t){
-//            fail("While deleting 2 in an AVL-1 tree, we encountered a " + t.getClass().getSimpleName() + " with message: " +
-//                    t.getMessage() + ".");
-//        }
-//
-//        assertEquals("In an AVL-1 tree where we deleted the root's singleton left child, we encountered an unexpected new root.",
-//                Integer.valueOf(7), tree.getRoot());
-//        assertEquals("In an AVL-1 tree where we deleted the root's singleton left child,  the tree's new height was not the expected one.",
-//                2, tree.getHeight());
-//
-//    }
+    /* In class, we mentioned an interesting special case of deletion. Namely, when we delete from a subtree and it 
+     * turns out that we have to balance, to determine which kind of rotation we have to do, we have to check the balance
+     * of the *opposite* subtree. If this balance is 0, then either a double rotation or a single rotation will do the 
+     * trick for us. Exactly because *both* are possible, there is no reason to go for the double rotation and your 
+     * code *should* perform a single one! The following test checks for exactly this by making sure that the correct
+     * node is elevated as the root of the AVL-1 tree.
+     */
+    @Test
+    public void testCorrectRotationAfterDelete() throws InvalidBalanceException, EmptyTreeException{
+        tree = new AVLGTree<>(1);
+        tree.insert(5);
+        tree.insert(2);
+        tree.insert(7);
+        tree.insert(6);
+        tree.insert(8);
+
+        /* The tree should then look like this:
+        *
+        *                           5
+        *                          / \
+        *                         /   \
+        *                        2     7
+        *                             / \
+        *                            /   \
+        *                           6     8
+        *
+        *  We will delete (2) and check to see if the code will perform a left rotation about the root (as it should),
+        *  which would put 7 as the new root, or a right-left rotation about the root (which it should *not* do), which
+        *  would elevate 6 as the new root.
+        *
+        *  Deletion is the most complex operation that you will have to implement, which in turn means that your implementation
+        *  might initially encounter all kinds of problems and throw all kinds of exceptions. In Java, any Object that can be thrown
+        *  implements the interface Throwable. So if you catch Throwables, you catch anything. Have a look at how we
+        *  encapsulate the deletion call within a try-catch block and use the information from the thrown Exception to determine
+        *  what exactly happened and elevate that information to the user. fail() is a method in org.junit.Assert which we statically
+        *  import at the top of this file. This method essentially fails the test with the provided message. This is how we give you your
+        *  messages on the submit server whenever you fail a test!
+        */
+        try {
+            tree.delete(2);
+        }  catch(Throwable t){
+            fail("While deleting 2 in an AVL-1 tree, we encountered a " + t.getClass().getSimpleName() + " with message: " +
+                    t.getMessage() + ".");
+        }
+
+        assertEquals("In an AVL-1 tree where we deleted the root's singleton left child, we encountered an unexpected new root.",
+                Integer.valueOf(7), tree.getRoot());
+        assertEquals("In an AVL-1 tree where we deleted the root's singleton left child,  the tree's new height was not the expected one.",
+                2, tree.getHeight());
+
+    }
 //
 //    /* This stress test generates NUMS-many random integers, inserts them into an AVL-3 tree, and queries it for
 //     * being a standard BST. Employing randomization in your tests is an excellent idea for stress-testing your
@@ -295,7 +295,18 @@ public class StudentTests {
     	tree.insert(14);
     	tree.insert(16);
     	tree.delete(10);
-    	
+    	int a = tree.getRoot();
+    	assertEquals(14,a);
+    }
+    
+    @Test
+    public void testisBST() throws InvalidBalanceException {
+    	AVLGTree<Integer> tree = new AVLGTree<Integer>(1);
+    	tree.insert(10);
+    	tree.insert(5);
+    	tree.insert(20);
+    	tree.insert(15);
+    	boolean b = tree.isBST();
     }
     
     

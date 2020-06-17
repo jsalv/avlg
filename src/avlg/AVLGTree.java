@@ -101,12 +101,12 @@ public class AVLGTree<T extends Comparable<T>> {
      */
     private void rotator(TreeNode rt) {
     	if (getCurrBalance(rt) < -1*maxImbalance) {
-    		if (getCurrBalance(rt.rChild) < 0 || getCurrBalance(rt.rChild) == maxImbalance)
+    		if (getCurrBalance(rt.rChild) <= 0 || getCurrBalance(rt.rChild) == maxImbalance)
     			rotateLeft(rt);
     		else if (getCurrBalance(rt.rChild) > 0)
     			rotateRL(rt);
     	} else if (getCurrBalance(rt) > maxImbalance) {
-    		if (getCurrBalance(rt.lChild) > 0 || getCurrBalance(rt.lChild) == maxImbalance)
+    		if (getCurrBalance(rt.lChild) >= 0 || getCurrBalance(rt.lChild) == maxImbalance )
     			rotateRight(rt);
     		else if (getCurrBalance(rt.lChild) < 0)
     			rotateLR(rt);
@@ -121,6 +121,7 @@ public class AVLGTree<T extends Comparable<T>> {
      */
     public T delete(T key) throws EmptyTreeException {
     	root = deleteHelper(root,key);
+    	rotator(root);
         return key;
     }
     
@@ -233,8 +234,34 @@ public class AVLGTree<T extends Comparable<T>> {
      * @return {@code true} if the tree satisfies the Binary Search Tree property,
      * {@code false} otherwise.
      */
-    public boolean isBST() {
-        throw new UnimplementedMethodException();       // ERASE THIS LINE AFTER YOU IMPLEMENT THIS METHOD!
+    public boolean isBST() {        
+        return traverse(root);
+    }
+    
+    private boolean traverse(TreeNode curr) {
+    	boolean ret = false;
+    	if (curr == null) {
+    		return false;
+    	}
+    	traverse(curr.lChild);
+    	if (!isLeaf(curr) && curr.lChild != null || curr.rChild != null) {
+    		boolean condition = false;
+    		if (curr.lChild != null && curr.rChild != null)
+    			condition = curr.lChild.data.compareTo(curr.data) < 0 && curr.rChild.data.compareTo(curr.data) > 0;
+    		else if (curr.lChild != null)
+    			condition = curr.lChild.data.compareTo(curr.data) < 0;
+    		else if (curr.rChild != null)
+    			condition = curr.rChild.data.compareTo(curr.data) > 0;
+    			
+    		if (!condition) {
+    			ret = false;
+    			return ret;
+    		} else {
+    			ret = true;
+    		}
+    	}
+    	traverse(curr.rChild);
+    	return ret;
     }
 
 
@@ -310,7 +337,12 @@ public class AVLGTree<T extends Comparable<T>> {
 				node.lChild = new TreeNode();
 			node.lChild.data = node.data;
 			if (node.rChild != null) {
-				node.data = node.rChild.data;		
+				node.data = node.rChild.data;
+				if (temp.lChild != null) {
+					if (node.lChild.rChild == null)
+						node.lChild.rChild = new TreeNode();
+					node.lChild.rChild.data = temp.lChild.data;
+				}
 				node.rChild = temp.rChild;
 			} 
 		} 
