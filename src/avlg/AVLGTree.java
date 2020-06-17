@@ -46,8 +46,361 @@ public class AVLGTree<T extends Comparable<T>> {
 	private TreeNode root;
 	private int maxImbalance;
 	private int size;
-
-
+	
+    /* ******************************************************** *
+     * ************************ PRIVATE METHODS **************** *
+     * ******************************************************** */
+	
+	 /* heightHelper(TreeNode rt):
+     * Helper method for getHeight()
+     * 
+     * Parameters:
+     * rt - root node
+     * 
+     * Other notes:
+     * Returns an integer to represent height of tree
+     */
+    private int heightHelper(TreeNode rt) {
+		if (rt == null) {
+			return -1;
+		} else {
+			int lHeight = heightHelper(rt.lChild);
+			int rHeight = heightHelper(rt.rChild);
+			
+			if (rHeight > lHeight)
+				return rHeight + 1;
+			else
+				return lHeight + 1;
+		}		
+	}
+    
+    /* getCurrBalance(TreeNode node):
+     * B(n) = h(LTree) - h(RTree)
+     * 
+     * Parameters:
+     * node - current node for recursion
+     * 
+     * Other notes:
+     * Returns an integer to represent h(LTree) - h(RTree)
+     */
+    private int getCurrBalance(TreeNode node) {
+    	return heightHelper(node.lChild) - heightHelper(node.rChild);
+    }
+    
+    /* rotateLeft(TreeNode node):
+     * B(n) < -1 && B(r) < 0
+     * 
+     * Parameters:
+     * node - current node for recursion
+     * 
+     * Other notes:
+     * After insertion of new element, must check the balance of root.
+     * Left Rotation requires B(n) < -1 && B(r) < 0.
+     * No return value.
+     */
+    private void rotateLeft(TreeNode node) {
+    	if (node.lChild != null) {
+			rotateLeft(node.lChild);
+		}
+    	if (!isLeaf(node)) {
+			TreeNode temp = node.rChild; 
+			if (node.lChild == null)
+				node.lChild = new TreeNode();
+			node.lChild.data = node.data;
+			if (node.rChild != null) {
+				node.data = node.rChild.data;
+				if (temp.lChild != null) {
+					if (node.lChild.rChild == null)
+						node.lChild.rChild = new TreeNode();
+					node.lChild.rChild.data = temp.lChild.data;
+				}
+				node.rChild = temp.rChild;
+			} 
+		} 
+		if (isLeaf(node)) {
+			if (node.lChild == null)
+				node.lChild = new TreeNode();
+			node.lChild.data = node.data;
+			return;
+		}   	
+    }
+    
+    /*rotateRight(TreeNode right):
+     * B(n) > 1 && B(l) > 0
+     * 
+     * Parameters:
+     * node - current node for recursion
+     * 
+     * Other notes:
+     * After insertion of new element, must check the balance of root
+     * Right Rotation requires B(n) > 1 && B(r) > 0
+     * No return value.
+     */
+    private void rotateRight(TreeNode node) {
+    	if (node.rChild != null) {
+    		rotateRight(node.rChild);
+    	}
+    	if (!isLeaf(node)) {
+    		TreeNode temp = node.lChild; 
+			if (node.rChild == null)
+				node.rChild = new TreeNode();
+			node.rChild.data = node.data;
+			if (node.lChild != null) {
+				node.data = node.lChild.data;
+				if (temp.rChild != null) {
+					if (node.rChild.lChild == null)
+						node.rChild.lChild = new TreeNode();
+					node.rChild.lChild.data = temp.rChild.data;
+				}
+				node.lChild = temp.lChild;
+			} 
+    	}
+    	if (isLeaf(node)) {
+			if (node.rChild == null)
+				node.rChild = new TreeNode();
+			node.rChild.data = node.data;
+			return;
+		} 
+    }
+    
+    /*rotateRL(TreeNode node):
+     * B(n) < -1 && B(r) > 0
+     * 
+     * Parameters:
+     * node - current node for recursion
+     * 
+     * Other notes:
+     * Rotate right at root of left subtree, then rotate.
+     * left at main root.
+     * No return value.
+     */
+    private void rotateRL(TreeNode node) {
+    	 rotateRight(node.rChild);
+    	 rotateLeft(node);
+    }
+    
+    /*rotateLR(TreeNode node):
+     * B(n) > 1 && B(l) < 0
+     * 
+     * Parameters:
+     * node - current node for recursion
+     * 
+     * Other notes:
+     * Rotate left at root of right subtree, then rotate
+     * right at main root.
+     * No return value.
+     */
+    private void rotateLR(TreeNode node) {
+    	rotateLeft(node.lChild);
+    	rotateRight(node);
+    }
+    
+    /*isLeaf(TreeNode curr): 
+     * Checks if current node is a leaf
+     * 
+     * Parameters:
+     * curr - node input
+     * 
+     * Other notes:
+     * Will assume that curr is not null.
+     * Returns boolean value to represent whether curr is a leaf
+     */
+    private boolean isLeaf(TreeNode curr) {
+    	return curr.lChild == null && curr.rChild == null;
+    }
+    
+    /* insertHelper(TreeNode rt, T keyInput):
+     * Helper method for insert()
+     * 
+     * Parameters:
+     * rt - root goes here
+     * keyInput - key to add
+     * 
+     * Other notes:
+     * Method makes use of an additional helper method called rotator(..)
+     * Returns TreeNode to represent new node after insertion
+     */
+    private TreeNode insertHelper(TreeNode rt, T keyInput) {
+    	if (rt == null) {
+    		rt = new TreeNode();
+    		rt.data = keyInput;
+    	}
+    	if (keyInput.compareTo(rt.data) < 0) {
+    		rt.lChild = insertHelper(rt.lChild,keyInput);
+        	rotator(rt);
+    	}
+    	if (keyInput.compareTo(rt.data) > 0) {
+    		rt.rChild = insertHelper(rt.rChild,keyInput);
+        	rotator(rt);
+    	}
+    	 return rt;
+    }
+    
+    /* rotator(TreeNode rt): 
+     * Helper method to check balance of current node and determine whether rotations are needed
+     * 
+     * Parameters:
+     * rt - root goes here
+     * 
+     * Other notes:
+     * No return value.
+     */
+    private void rotator(TreeNode rt) {
+    	if (getCurrBalance(rt) < -1*maxImbalance) {
+    		if (getCurrBalance(rt.rChild) <= 0 || getCurrBalance(rt.rChild) == 0)
+    			rotateLeft(rt);
+    		else if (getCurrBalance(rt.rChild) > 0)
+    			rotateRL(rt);
+    	} else if (getCurrBalance(rt) > maxImbalance) {
+    		if (getCurrBalance(rt.lChild) >= 0 || getCurrBalance(rt.lChild) == 0)
+    			rotateRight(rt);
+    		else if (getCurrBalance(rt.lChild) < 0)
+    			rotateLR(rt);
+    	}
+    }
+    
+    /* deleteHelper(TreeNode curr, T keyInput):
+     * Helper method for delete
+     * 
+     * Parameters:
+     * rt - root goes here
+     * keyInput - key to add
+     * 
+     * Other notes:
+     * Method makes use of an additional helper method called rotator(..)
+     * Returns TreeNode to represent new node after deletion
+     */
+    private TreeNode deleteHelper(TreeNode node, T keyInput) {
+    	TreeNode curr = node;
+    	if (node != null) {
+	    	if (keyInput.compareTo(node.data) == 0) {
+	    		if (isLeaf(curr)) {
+	    			curr = null;
+	    			size--;
+	    		} else {
+	    			if (curr.rChild.lChild == null) {
+	    				curr.data = curr.rChild.data;
+	    				curr.rChild = deleteHelper(curr.rChild,curr.data);
+	    				rotator(curr);
+	    			} else {
+	    				T temp = fetch(curr.rChild.lChild);
+	    				curr.data = temp;
+	    				curr.rChild = deleteHelper(curr.rChild,temp);
+	    				rotator(curr);
+	    			}
+	    		}
+	    	}    		
+	    	else if (keyInput.compareTo(node.data) < 0) {
+	    		curr.lChild = deleteHelper(node.lChild,keyInput);
+	    		rotator(curr);
+	    	}
+	    	else if (keyInput.compareTo(node.data) > 0) {
+	    		curr.rChild = deleteHelper(node.rChild,keyInput);
+	    		rotator(curr);
+	    	}
+    	}
+    	return curr;
+    }
+    
+    /* fetch(TreeNode curr):
+     * Will fetch leftmost leaf on specified branch of curr
+     * 
+     * Parameters:
+     * curr - Current node goes here; recursion purposes
+     * 
+     * Other notes:
+     * Returns T value fetched
+     */
+    private T fetch(TreeNode curr) {
+    	if (curr.lChild == null) 
+    		return curr.data;
+    	return fetch(curr.lChild);
+    }
+    
+    /* searchHelper(TreeNode node,T keyInput):
+     * Helper method for search(..)
+     * 
+     * Parameters:
+     * rt - root goes here
+     * keyInput - key to add
+     * 
+     * Other notes:
+     * Returns TreeNode to represent new node after deletion
+     */
+    private TreeNode searchHelper(TreeNode node,T keyInput) {
+    	TreeNode toReturn = node;
+    	if (node != null) {
+	    	if (keyInput.compareTo(node.data) == 0)
+	    		return toReturn;
+	    	else if (keyInput.compareTo(node.data) < 0)
+	    		toReturn = searchHelper(node.lChild,keyInput);
+	    	else if (keyInput.compareTo(node.data) > 0)
+	    		toReturn = searchHelper(node.rChild,keyInput);
+    	}
+    	return toReturn;
+    }
+    
+    /* traverse(TreeNode curr):
+     * Helper method for isBST() to help determine if each node satisfies BST property
+     * 
+     * Parameters:
+     * curr - Current node; recursion purposes
+     * 
+     * Other notes:
+     * Returns boolean value to represent satisfaction of BST property
+     */
+    private boolean traverse(TreeNode curr) {
+    	boolean ret = false;
+    	if (curr == null) {
+    		return false;
+    	}
+    	traverse(curr.lChild);
+    	if (!isLeaf(curr) && curr.lChild != null || curr.rChild != null) {
+    		boolean condition = false;
+    		if (curr.lChild != null && curr.rChild != null)
+    			condition = curr.lChild.data.compareTo(curr.data) < 0 && curr.rChild.data.compareTo(curr.data) > 0;
+    		else if (curr.lChild != null)
+    			condition = curr.lChild.data.compareTo(curr.data) < 0;
+    		else if (curr.rChild != null)
+    			condition = curr.rChild.data.compareTo(curr.data) > 0;
+    			
+    		if (!condition) {
+    			ret = false;
+    			return ret;
+    		} else {
+    			ret = true;
+    		}
+    	}
+    	traverse(curr.rChild);
+    	return ret;
+    }
+    
+    /* build(TreeNode curr, T elt):
+     * Helper method for testBSTProperty(..) to help with building a tree by reversing comparisons
+     * to get incorrect tree
+     * 
+     * Parameters:
+     * rt - Current node; recursion
+     * keyInput - key to add
+     * 
+     * Other notes:
+     * No return value.
+     */
+    private TreeNode build(TreeNode rt, T keyInput) {
+    	if (rt == null) {
+    		rt = new TreeNode();
+    		rt.data = keyInput;
+    	}
+    	if (keyInput.compareTo(rt.data) > 0) {
+    		rt.lChild = build(rt.lChild,keyInput);
+    	}
+    	if (keyInput.compareTo(rt.data) < 0) {
+    		rt.rChild = build(rt.rChild,keyInput);
+    	}
+    	return rt;
+    }
+    
+    
     /* ******************************************************** *
      * ************************ PUBLIC METHODS **************** *
      * ******************************************************** */
@@ -72,47 +425,9 @@ public class AVLGTree<T extends Comparable<T>> {
      */
     public void insert(T key) {
     	root = insertHelper(root,key);
+    	size++;
     }
     
-    /**
-     * Helper method for insert()
-     * Insertions must involve checking if maxImbalance is reached
-     * If so, rotations must be done.
-     */
-    private TreeNode insertHelper(TreeNode rt, T keyInput) {
-    	if (rt == null) {
-    		rt = new TreeNode();
-    		rt.data = keyInput;
-    		size++;
-    	}
-    	if (keyInput.compareTo(rt.data) < 0) {
-    		rt.lChild = insertHelper(rt.lChild,keyInput);
-        	rotator(rt);
-    	}
-    	if (keyInput.compareTo(rt.data) > 0) {
-    		rt.rChild = insertHelper(rt.rChild,keyInput);
-        	rotator(rt);
-    	}
-    	 return rt;
-    }
-    
-    /* rotator(TreeNode rt): 
-     * Helper method to check balance of current node and determine whether rotations are needed
-     */
-    private void rotator(TreeNode rt) {
-    	if (getCurrBalance(rt) < -1*maxImbalance) {
-    		if (getCurrBalance(rt.rChild) <= 0 || getCurrBalance(rt.rChild) == maxImbalance)
-    			rotateLeft(rt);
-    		else if (getCurrBalance(rt.rChild) > 0)
-    			rotateRL(rt);
-    	} else if (getCurrBalance(rt) > maxImbalance) {
-    		if (getCurrBalance(rt.lChild) >= 0 || getCurrBalance(rt.lChild) == maxImbalance )
-    			rotateRight(rt);
-    		else if (getCurrBalance(rt.lChild) < 0)
-    			rotateLR(rt);
-    	}
-    }
-
     /**
      * Delete the key from the data structure and return it to the caller.
      * @param key The key to delete from the structure.
@@ -121,46 +436,10 @@ public class AVLGTree<T extends Comparable<T>> {
      */
     public T delete(T key) throws EmptyTreeException {
     	root = deleteHelper(root,key);
-    	rotator(root);
+
         return key;
     }
     
-    /* deleteHelper(TreeNode curr, T keyInput)
-     * 
-     */
-    private TreeNode deleteHelper(TreeNode node, T keyInput) {
-    	TreeNode curr = node;
-    	if (node != null) {
-	    	if (keyInput.compareTo(node.data) == 0) {
-	    		if (isLeaf(curr)) {
-	    			curr = null;
-	    		} else {
-	    			if (curr.rChild.lChild == null) {
-	    				curr.data = curr.rChild.data;
-	    				curr.rChild = deleteHelper(curr.rChild,curr.data);
-	    			} else {
-	    				T temp = fetch(curr.rChild.lChild);
-	    				curr.data = temp;
-	    				curr.rChild = deleteHelper(curr.rChild,temp);
-	    			}
-	    		}
-	    	}    		
-	    	else if (keyInput.compareTo(node.data) < 0)
-	    		curr.lChild = deleteHelper(node.lChild,keyInput);
-	    	else if (keyInput.compareTo(node.data) > 0)
-	    		curr.rChild = deleteHelper(node.rChild,keyInput);
-    	}
-    	return curr;
-    }
-    /* fetch(TreeNode curr):
-     * Will fetch leftmost leaf on specified branch of curr
-     */
-    private T fetch(TreeNode curr) {
-    	if (curr.lChild == null) 
-    		return curr.data;
-    	return fetch(curr.lChild);
-    }
-
     /**
      * <p>Search for key in the tree. Return a reference to it if it's in there,
      * or {@code null} otherwise.</p>
@@ -172,21 +451,6 @@ public class AVLGTree<T extends Comparable<T>> {
         return searchHelper(root,key).data;
     }
     
-    private TreeNode searchHelper(TreeNode node,T keyInput) {
-    	TreeNode toReturn = node;
-    	if (node != null) {
-	    	if (keyInput.compareTo(node.data) == 0)
-	    		return toReturn;
-	    	else if (keyInput.compareTo(node.data) < 0)
-	    		toReturn = searchHelper(node.lChild,keyInput);
-	    	else if (keyInput.compareTo(node.data) > 0)
-	    		toReturn = searchHelper(node.rChild,keyInput);
-    	}
-    	return toReturn;
-    }
-    
-    
-
     /**
      * Retrieves the maximum imbalance parameter.
      * @return The maximum imbalance parameter provided as a constructor parameter.
@@ -227,7 +491,6 @@ public class AVLGTree<T extends Comparable<T>> {
     	return root.data;
     }
 
-
     /**
      * <p>Establishes whether the AVL-G tree <em>globally</em> satisfies the BST condition. This method is
      * <b>terrifically useful for testing!</b></p>
@@ -238,33 +501,6 @@ public class AVLGTree<T extends Comparable<T>> {
         return traverse(root);
     }
     
-    private boolean traverse(TreeNode curr) {
-    	boolean ret = false;
-    	if (curr == null) {
-    		return false;
-    	}
-    	traverse(curr.lChild);
-    	if (!isLeaf(curr) && curr.lChild != null || curr.rChild != null) {
-    		boolean condition = false;
-    		if (curr.lChild != null && curr.rChild != null)
-    			condition = curr.lChild.data.compareTo(curr.data) < 0 && curr.rChild.data.compareTo(curr.data) > 0;
-    		else if (curr.lChild != null)
-    			condition = curr.lChild.data.compareTo(curr.data) < 0;
-    		else if (curr.rChild != null)
-    			condition = curr.rChild.data.compareTo(curr.data) > 0;
-    			
-    		if (!condition) {
-    			ret = false;
-    			return ret;
-    		} else {
-    			ret = true;
-    		}
-    	}
-    	traverse(curr.rChild);
-    	return ret;
-    }
-
-
     /**
      * <p>Establishes whether the AVL-G tree <em>globally</em> satisfies the AVL-G condition. This method is
      * <b>terrifically useful for testing!</b></p>
@@ -272,8 +508,9 @@ public class AVLGTree<T extends Comparable<T>> {
      * otherwise.
      */
     public boolean isAVLGBalanced() {
-        throw new UnimplementedMethodException();       // ERASE THIS LINE AFTER YOU IMPLEMENT THIS METHOD!
+    	return (getCurrBalance(root) > -1*maxImbalance && getCurrBalance(root) < maxImbalance);
     }
+
 
     /**
      * <p>Empties the AVL-G Tree of all its elements. After a call to this method, the
@@ -290,128 +527,31 @@ public class AVLGTree<T extends Comparable<T>> {
      * @return  The number of elements in the tree.
      */
     public int getCount(){
-        throw new UnimplementedMethodException();       // ERASE THIS LINE AFTER YOU IMPLEMENT THIS METHOD!
+        return size;
     }
-    
-    /* ******************************************************** *
-     * ************************ PRIVATE METHODS **************** *
-     * ******************************************************** */
-    
-    /* heightHelper(TreeNode rt):
-     * rt - root node
-     * 
-     * Helper method for getHeight()
+
+    /* testBSTProperty(T[] a):
+     *  To test isBST()
+     *  
+     *  Parameters:
+     *  a - array of T elements
+     *  
+     *  Other notes:
+     *  
      */
-    private int heightHelper(TreeNode rt) {
-		if (rt == null) {
-			return -1;
-		} else {
-			int lHeight = heightHelper(rt.lChild);
-			int rHeight = heightHelper(rt.rChild);
-			
-			if (rHeight > lHeight)
-				return rHeight + 1;
-			else
-				return lHeight + 1;
-		}		
-	}
-    
-    /* Balance:
-     * B(n) = h(LTree) - h(RTree)
-     */
-    private int getCurrBalance(TreeNode node) {
-    	return heightHelper(node.lChild) - heightHelper(node.rChild);
-    }
-    
-    /* Rotations:
-     * - After insertion of new element, must check the balance of root
-     * - Left Rotation requires B(n) < -1 && B(r) < 0
-     */
-    private void rotateLeft(TreeNode node) {
-    	if (node.lChild != null) {
-			rotateLeft(node.lChild);
-		}
-    	if (!isLeaf(node)) {
-			TreeNode temp = node.rChild; 
-			if (node.lChild == null)
-				node.lChild = new TreeNode();
-			node.lChild.data = node.data;
-			if (node.rChild != null) {
-				node.data = node.rChild.data;
-				if (temp.lChild != null) {
-					if (node.lChild.rChild == null)
-						node.lChild.rChild = new TreeNode();
-					node.lChild.rChild.data = temp.lChild.data;
-				}
-				node.rChild = temp.rChild;
-			} 
-		} 
-		if (isLeaf(node)) {
-			if (node.lChild == null)
-				node.lChild = new TreeNode();
-			node.lChild.data = node.data;
-			return;
-		}   	
-    }
-    
-    /*rotateRight(TreeNode right)
-     * - After insertion of new element, must check the balance of root
-     * - Right Rotation requires B(n) > 1 && B(r) > 0
-     */
-    private void rotateRight(TreeNode node) {
-    	if (node.rChild != null) {
-    		rotateRight(node.rChild);
+    public boolean testBSTProperty(T [] a) {
+    	for (int i = 0 ; i < a.length; i++) {
+    		root = build(root,a[i]);
     	}
-    	if (!isLeaf(node)) {
-    		TreeNode temp = node.lChild; 
-			if (node.rChild == null)
-				node.rChild = new TreeNode();
-			node.rChild.data = node.data;
-			if (node.lChild != null) {
-				node.data = node.lChild.data;
-				if (temp.rChild != null) {
-					if (node.rChild.lChild == null)
-						node.rChild.lChild = new TreeNode();
-					node.rChild.lChild.data = temp.rChild.data;
-				}
-				node.lChild = temp.lChild;
-			} 
-    	}
-    	if (isLeaf(node)) {
-			if (node.rChild == null)
-				node.rChild = new TreeNode();
-			node.rChild.data = node.data;
-			return;
-		} 
+  		
+    	return isBST();
     }
     
-    /*rotateRL(TreeNode node)
-     * - Rotate right at root of left subtree, then rotate
-     * left at tree node
-     */
-    private void rotateRL(TreeNode node) {
-    	 rotateRight(node.rChild);
-    	 rotateLeft(node);
-    }
+   
     
-    /*rotateLR(TreeNode node)
-     * - Rotate left at root of right subtree, then rotate
-     * left at tree node
-     */
-    private void rotateLR(TreeNode node) {
-    	rotateLeft(node.lChild);
-    	rotateRight(node);
-    }
     
-    /*isLeaf(TreeNode curr): checks if current node is a leaf
-     * Parameters:
-     * curr - node input
-     * Other notes:
-     * Will assume that curr is not null
-     */
-    private boolean isLeaf(TreeNode curr) {
-    	return curr.lChild == null && curr.rChild == null;
-    }
+    
+   
     
     
     

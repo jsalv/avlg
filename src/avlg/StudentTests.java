@@ -297,16 +297,29 @@ public class StudentTests {
     	tree.delete(10);
     	int a = tree.getRoot();
     	assertEquals(14,a);
+    	
+    	// Case 2: delete(7)
+    	tree.clear();
+    	tree.insert(28);
+    	tree.insert(20);
+    	tree.insert(34);
+    	tree.insert(7);
+    	tree.insert(24);
+    	tree.insert(32);
+    	tree.insert(40);
+    	tree.insert(23);
+    	tree.insert(35);
+    	tree.insert(56);
+    	
+    	tree.delete(7);
+    	assertEquals(28,(int)tree.getRoot());
     }
     
     @Test
     public void testisBST() throws InvalidBalanceException {
     	AVLGTree<Integer> tree = new AVLGTree<Integer>(1);
-    	tree.insert(10);
-    	tree.insert(5);
-    	tree.insert(20);
-    	tree.insert(15);
-    	boolean b = tree.isBST();
+
+    	assertFalse(tree.testBSTProperty(new Integer[] {10,30,20}));
     }
     
     
