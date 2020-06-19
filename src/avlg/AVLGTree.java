@@ -248,14 +248,16 @@ public class AVLGTree<T extends Comparable<T>> {
     private void rotator(TreeNode rt,int balance) {
     	// Right side is heavier
     	if (getCurrBalance(rt) < -1*balance) {
-    		if (getCurrBalance(rt.rChild) <= 0 || getCurrBalance(rt.rChild) == 0)
-    			rotateLeft(rt);
+    		if (getCurrBalance(rt.rChild) <= 0 || getCurrBalance(rt.rChild) == 0) 
+    			rotateLeft(rt);	
     		else if (getCurrBalance(rt.rChild) > 0) {
     			if (isLeaf(rt.rChild.lChild))
     				rotateRL(rt);
     			else {
     				rotator(rt.rChild,balance-1);
-    				rotateLeft(rt);
+    				boolean condition = Math.abs(getCurrBalance(root)) <= maxImbalance;
+    				if (condition == false)
+    					rotateLeft(rt);
     			}
     		}
     	
@@ -268,7 +270,9 @@ public class AVLGTree<T extends Comparable<T>> {
     				rotateLR(rt);
     			else {
     				rotator(rt.lChild,balance-1);
-    				rotateRight(rt);
+    				boolean condition = Math.abs(getCurrBalance(root)) <= maxImbalance;
+    				if (condition == false)
+    					rotateRight(rt);
     			}
     		}
     	}
