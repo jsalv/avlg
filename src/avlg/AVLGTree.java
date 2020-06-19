@@ -150,7 +150,7 @@ public class AVLGTree<T extends Comparable<T>> {
 				if (temp.rChild != null) {
 					if (node.rChild.lChild == null)
 						node.rChild.lChild = new TreeNode();
-					node.rChild.lChild.data = temp.rChild.data;
+					node.rChild.lChild = temp.rChild;
 				}
 				node.lChild = temp.lChild;
 			} 
@@ -227,11 +227,11 @@ public class AVLGTree<T extends Comparable<T>> {
     	}
     	if (keyInput.compareTo(rt.data) < 0) {
     		rt.lChild = insertHelper(rt.lChild,keyInput);
-        	rotator(rt);
+        	rotator(rt,maxImbalance);
     	}
     	if (keyInput.compareTo(rt.data) > 0) {
     		rt.rChild = insertHelper(rt.rChild,keyInput);
-        	rotator(rt);
+        	rotator(rt,maxImbalance);
     	}
     	 return rt;
     }
@@ -245,17 +245,32 @@ public class AVLGTree<T extends Comparable<T>> {
      * Other notes:
      * No return value.
      */
-    private void rotator(TreeNode rt) {
-    	if (getCurrBalance(rt) < -1*maxImbalance) {
+    private void rotator(TreeNode rt,int balance) {
+    	// Right side is heavier
+    	if (getCurrBalance(rt) < -1*balance) {
     		if (getCurrBalance(rt.rChild) <= 0 || getCurrBalance(rt.rChild) == 0)
     			rotateLeft(rt);
-    		else if (getCurrBalance(rt.rChild) > 0)
-    			rotateRL(rt);
-    	} else if (getCurrBalance(rt) > maxImbalance) {
+    		else if (getCurrBalance(rt.rChild) > 0) {
+    			if (isLeaf(rt.rChild.lChild))
+    				rotateRL(rt);
+    			else {
+    				rotator(rt.rChild,balance-1);
+    				rotateLeft(rt);
+    			}
+    		}
+    	
+    	// Left side is heavier
+    	} else if (getCurrBalance(rt) > balance) {
     		if (getCurrBalance(rt.lChild) >= 0 || getCurrBalance(rt.lChild) == 0)
     			rotateRight(rt);
-    		else if (getCurrBalance(rt.lChild) < 0)
-    			rotateLR(rt);
+    		else if (getCurrBalance(rt.lChild) < 0) { 			
+    			if (isLeaf(rt.lChild.rChild))
+    				rotateLR(rt);
+    			else {
+    				rotator(rt.lChild,balance-1);
+    				rotateRight(rt);
+    			}
+    		}
     	}
     }
     
@@ -281,22 +296,22 @@ public class AVLGTree<T extends Comparable<T>> {
 	    			if (curr.rChild.lChild == null) {
 	    				curr.data = curr.rChild.data;
 	    				curr.rChild = deleteHelper(curr.rChild,curr.data);
-	    				rotator(curr);
+	    				rotator(curr,maxImbalance);
 	    			} else {
 	    				T temp = fetch(curr.rChild.lChild);
 	    				curr.data = temp;
 	    				curr.rChild = deleteHelper(curr.rChild,temp);
-	    				rotator(curr);
+	    				rotator(curr,maxImbalance);
 	    			}
 	    		}
 	    	}    		
 	    	else if (keyInput.compareTo(node.data) < 0) {
 	    		curr.lChild = deleteHelper(node.lChild,keyInput);
-	    		rotator(curr);
+	    		rotator(curr,maxImbalance);
 	    	}
 	    	else if (keyInput.compareTo(node.data) > 0) {
 	    		curr.rChild = deleteHelper(node.rChild,keyInput);
-	    		rotator(curr);
+	    		rotator(curr,maxImbalance);
 	    	}
     	}
     	return curr;
@@ -435,8 +450,10 @@ public class AVLGTree<T extends Comparable<T>> {
      * @throws EmptyTreeException if the tree is empty.
      */
     public T delete(T key) throws EmptyTreeException {
+    	if (isEmpty())
+    		throw new EmptyTreeException("Tree is empty.");
+    	
     	root = deleteHelper(root,key);
-
         return key;
     }
     
@@ -448,6 +465,9 @@ public class AVLGTree<T extends Comparable<T>> {
      * @throws EmptyTreeException if the tree is empty.
      */
     public T search(T key) throws EmptyTreeException {
+    	if (isEmpty())
+    		throw new EmptyTreeException("Tree is empty.");
+    	
         return searchHelper(root,key).data;
     }
     
@@ -488,6 +508,7 @@ public class AVLGTree<T extends Comparable<T>> {
     public T getRoot() throws EmptyTreeException{
     	if (isEmpty())
     		throw new EmptyTreeException("No elements in tree.");
+    	
     	return root.data;
     }
 
@@ -508,7 +529,7 @@ public class AVLGTree<T extends Comparable<T>> {
      * otherwise.
      */
     public boolean isAVLGBalanced() {
-    	return (getCurrBalance(root) > -1*maxImbalance && getCurrBalance(root) < maxImbalance);
+    	return (getCurrBalance(root) >= -1*maxImbalance && getCurrBalance(root) <= maxImbalance);
     }
 
 
@@ -535,13 +556,19 @@ public class AVLGTree<T extends Comparable<T>> {
      *  
      *  Parameters:
      *  a - array of T elements
-     *  
+     *  x - 0 if build(..), 1 if insertHelper(..)
      *  Other notes:
      *  
      */
-    public boolean testBSTProperty(T [] a) {
-    	for (int i = 0 ; i < a.length; i++) {
-    		root = build(root,a[i]);
+    public boolean testBSTProperty(T [] a,int x) {
+    	if (x == 0) {
+	    	for (int i = 0 ; i < a.length; i++) {
+	    		root = build(root,a[i]);
+	    	}
+    	} else {
+    		for (int i = 0 ; i < a.length; i++) {
+	    		root = insertHelper(root,a[i]);
+	    	}
     	}
   		
     	return isBST();
